@@ -1,4 +1,5 @@
 import socket
+import threading
 
 IP = 'localhost'
 PORT = 1234
@@ -26,3 +27,18 @@ def handle(client: socket.socket) -> None:
             clients.remove(client)
             client.close()
             break
+
+
+def main():
+    print(f'server is running on port={PORT}')
+    while True:
+        client, address = server.accept()
+        print(f'{client} joined the chat')
+        broadcast(f'{client} joined the chat')
+        clients.add(client)
+        thread = threading.Thread(target=handle, args=(client,))
+        thread.start()
+
+
+if __name__ == '__main__':
+    main()
