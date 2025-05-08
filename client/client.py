@@ -17,3 +17,10 @@ def receive():
             print('disconnected')
             client.close()
             break
+
+
+def send():
+    while True:
+        message = input('>>')
+        client.send(message.encode())
+
