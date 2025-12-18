@@ -9,10 +9,13 @@ server.bind((IP, PORT))
 server.listen(4)
 
 clients: set[socket.socket] = set()
+clients_lock = threading.Lock()
 
 
 def broadcast(message: str, sender: socket.socket | None = None) -> None:
-    for client in clients:
+    with clients_lock:
+        snapshot = list(clients)
+    for client in snapshot:
         if client != sender:
             client.send(message.encode())
 
@@ -25,7 +28,8 @@ def handle(client: socket.socket, address) -> None:
         except:
             broadcast(f"{address} left the chat.")
             print(f"{address} left the chat")
-            clients.remove(client)
+            with clients_lock:
+                clients.remove(client)
             client.close()
             break
 
@@ -36,7 +40,8 @@ def main():
         client, address = server.accept()
         print(f"{address} joined the chat")
         broadcast(f"{address} joined the chat")
-        clients.add(client)
+        with clients_lock:
+            clients.add(client)
         thread = threading.Thread(target=handle, args=(client, address))
         thread.start()
 
