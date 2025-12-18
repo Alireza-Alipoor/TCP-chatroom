@@ -1,7 +1,7 @@
 import socket
 import threading
 
-IP = 'localhost'
+IP = "localhost"
 PORT = 1234
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -14,15 +14,20 @@ def receive():
             message = client.recv(1024).decode()
             print(message)
         except:
-            print('disconnected')
+            print("disconnected")
             client.close()
             break
 
 
 def send():
     while True:
-        message = input('>>')
-        client.send(message.encode())
+        message = input(">>")
+        match message:
+            case "exit":
+                client.close()
+                break
+            case _:
+                client.send(message.encode())
 
 
 receive_thread = threading.Thread(target=receive)
@@ -30,3 +35,4 @@ receive_thread.start()
 
 send_thread = threading.Thread(target=send)
 send_thread.start()
+
