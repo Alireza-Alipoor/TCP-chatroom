@@ -20,18 +20,25 @@ def broadcast(message: str, sender: socket.socket | None = None) -> None:
             client.send(message.encode())
 
 
-def handle(client: socket.socket, address) -> None:
-    while True:
-        try:
-            message = client.recv(1024).decode()
+def handle(client, address):
+    try:
+        while True:
+            data = client.recv(1024)
+            if not data:
+                break
+            message = data.decode()
             broadcast(f"{address}:{message}", client)
-        except:
-            broadcast(f"{address} left the chat.")
-            print(f"{address} left the chat")
-            with clients_lock:
-                clients.remove(client)
+    except Exception:
+        pass
+    finally:
+        with clients_lock:
+            clients.discard(client)
+        try:
             client.close()
-            break
+        except OSError:
+            pass
+        broadcast(f"{address} left the chat.", client)
+        print(f"{address} left the chat")
 
 
 def main():
