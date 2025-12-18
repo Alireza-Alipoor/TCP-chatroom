@@ -15,9 +15,22 @@ clients_lock = threading.Lock()
 def broadcast(message: str, sender: socket.socket | None = None) -> None:
     with clients_lock:
         snapshot = list(clients)
+    payload = message.encode()
+    dead_sockets = []
     for client in snapshot:
-        if client != sender:
-            client.send(message.encode())
+        try:
+            if client != sender:
+                client.sendall(payload)
+        except OSError:
+            dead_sockets.append(client)
+    with clients_lock:
+        for dead_s in dead_sockets:
+            clients.discard(dead_s)
+    for dead_s in dead_sockets:
+        try:
+            dead_s.close()
+        except OSError:
+            pass
 
 
 def handle(client, address):
